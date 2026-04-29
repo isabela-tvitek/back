@@ -1,29 +1,27 @@
+
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
-import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { afterAll, beforeAll, describe, it } from '@jest/globals';
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
-
-  beforeEach(async () => {
+describe('Tasks (e2e)', () => {
+  let app: INestApplication;
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
-
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe()); 
     await app.init();
   });
-
-  it('/ (GET)', () => {
+  it('/tasks (POST) - Deve retornar 400 ao enviar título vazio', () => {
     return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+      .post('/tasks')
+      .send({ title: '', description: 'Nova Task', extraField: 'Campo Extra' }) // Enviando um campo extra para testar o whitelist
+      .expect(400); // O teste vai FALHAR aqui (receberá 201)
   });
-
-  afterEach(async () => {
+  afterAll(async () => {
     await app.close();
   });
 });
